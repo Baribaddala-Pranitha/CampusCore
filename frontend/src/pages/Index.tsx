@@ -1,12 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { 
-  GraduationCap, 
-  Users, 
-  BookOpen, 
-  Bus, 
-  DollarSign, 
-  Building, 
+import {
+  GraduationCap,
+  Users,
+  BookOpen,
+  Bus,
+  DollarSign,
+  Building,
   Shield,
   ChevronRight,
   CheckCircle,
@@ -109,14 +109,16 @@ const Index = () => {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-violet-600 rounded-lg flex items-center justify-center">
-                <GraduationCap className="w-6 h-6 text-white" />
-              </div>
+              <img
+                src="/Educatin.svg"
+                alt="EduManage Logo"
+                className="w-30 h-30 object-contain"
+              />
               <span className="text-2xl font-bold bg-gradient-to-r from-violet-600 to-violet-400 bg-clip-text text-transparent">
                 EduManage
               </span>
             </div>
-            
+
             <div className="hidden md:flex items-center space-x-8">
               <a href="#features" className="text-foreground/70 hover:text-foreground transition-smooth">Features</a>
               <a href="#how-it-works" className="text-foreground/70 hover:text-foreground transition-smooth">How It Works</a>
@@ -176,11 +178,11 @@ const Index = () => {
               Everything you need to run a modern educational institution
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <Card 
-                key={index} 
+              <Card
+                key={index}
                 className="p-6 hover-lift cursor-pointer border-2 hover:border-primary/50 transition-smooth animate-scale-in"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
@@ -202,7 +204,7 @@ const Index = () => {
             <h2 className="text-4xl md:text-5xl font-bold mb-4">How It Works</h2>
             <p className="text-xl text-muted-foreground">Get started in minutes</p>
           </div>
-          
+
           <div className="max-w-4xl mx-auto">
             {steps.map((item, index) => (
               <div key={index} className="flex gap-6 mb-12 last:mb-0 animate-slide-up" style={{ animationDelay: `${index * 0.15}s` }}>
@@ -228,7 +230,7 @@ const Index = () => {
             <h2 className="text-4xl md:text-5xl font-bold mb-4">Access Your Portal</h2>
             <p className="text-xl text-muted-foreground">Role-based access for everyone</p>
           </div>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {portals.map((portal, index) => (
               <Link to="/login" state={{ role: portal.role }} key={index}>
@@ -252,7 +254,7 @@ const Index = () => {
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-4">Trusted by Schools</h2>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, i) => (
               <Card key={i} className="p-6 hover-lift">
@@ -296,7 +298,7 @@ const Index = () => {
                 Comprehensive school management system for modern institutions
               </p>
             </div>
-            
+
             <div>
               <h4 className="font-semibold mb-3">Product</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
@@ -305,7 +307,7 @@ const Index = () => {
                 <li><a href="#" className="hover:text-foreground transition-smooth">Pricing</a></li>
               </ul>
             </div>
-            
+
             <div>
               <h4 className="font-semibold mb-3">Company</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
@@ -314,7 +316,7 @@ const Index = () => {
                 <li><a href="#" className="hover:text-foreground transition-smooth">Blog</a></li>
               </ul>
             </div>
-            
+
             <div>
               <h4 className="font-semibold mb-3">Legal</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
@@ -323,7 +325,7 @@ const Index = () => {
               </ul>
             </div>
           </div>
-          
+
           <div className="pt-8 border-t text-center text-sm text-muted-foreground">
             <p>© 2025 EduManage. All rights reserved.</p>
           </div>

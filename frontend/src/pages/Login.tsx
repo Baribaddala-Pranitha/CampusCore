@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
+import { api } from "@/lib/api";
 import {
   GraduationCap,
   Shield,
@@ -19,11 +20,31 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const preselectedRole = location.state?.role;
-  
+
   const [selectedRole, setSelectedRole] = useState(preselectedRole || "");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // States for email verification resend flow
+  const [showResend, setShowResend] = useState(false);
+  const [resendEmail, setResendEmail] = useState("");
+  const [isResending, setIsResending] = useState(false);
+
+  // Check URL query parameters for verified=true status
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("verified") === "true") {
+      toast.success("Email verified successfully! You can now log in.");
+      navigate(location.pathname, { replace: true });
+    } else if (params.get("verified") === "false") {
+      toast.error("Email verification failed. The link might be invalid or expired.");
+      navigate(location.pathname, { replace: true });
+    } else if (params.get("registered") === "true") {
+      toast.info("Check your inbox for a verification email before logging in.");
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location, navigate]);
 
   const roles = [
     { value: "admin", label: "Admin/Founder", icon: Shield, color: "from-indigo-500 to-purple-600" },
@@ -34,31 +55,69 @@ const Login = () => {
     { value: "transport", label: "Transport", icon: Bus, color: "from-cyan-500 to-blue-600" }
   ];
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!selectedRole) {
       toast.error("Please select a role");
       return;
     }
-    
+
     if (!email || !password) {
       toast.error("Please fill in all fields");
       return;
     }
 
     setIsLoading(true);
-    
-    // Simulate authentication
-    setTimeout(() => {
-      localStorage.setItem("userRole", selectedRole);
+
+    try {
+      const data = await api.post("/auth/login", { email, password });
+      
+      // Ensure the logged in user's role matches the selected role
+      if (data.user.role !== selectedRole) {
+        toast.error(`Invalid credentials for role: ${selectedRole}`);
+        setIsLoading(false);
+        return;
+      }
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("userRole", data.user.role);
       localStorage.setItem("isAuthenticated", "true");
       toast.success("Login successful!");
       
-      // Navigate to appropriate dashboard
-      navigate(`/${selectedRole}/dashboard`);
+      // Redirect dynamically based on the role
+      navigate(`/${data.user.role}/dashboard`);
+    } catch (error: any) {
+      console.error("Login API error:", error);
+      const errMsg = error.message || "Failed to log in";
+      toast.error(errMsg);
+      // Show option to resend verification email if relevant
+      if (errMsg.toLowerCase().includes("verify your email")) {
+        setShowResend(true);
+        setResendEmail(email);
+      }
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
+  };
+
+  const handleResend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resendEmail) {
+      toast.error("Please enter your email");
+      return;
+    }
+
+    setIsResending(true);
+    try {
+      const response = await api.post("/auth/resend-verification", { email: resendEmail });
+      toast.success(response.message || "Verification email resent successfully! Check your inbox.");
+      setShowResend(false);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to resend verification email");
+    } finally {
+      setIsResending(false);
+    }
   };
 
   return (
@@ -85,11 +144,10 @@ const Login = () => {
               {roles.map((role) => (
                 <Card
                   key={role.value}
-                  className={`p-6 cursor-pointer transition-all hover-lift ${
-                    selectedRole === role.value
+                  className={`p-6 cursor-pointer transition-all hover-lift ${selectedRole === role.value
                       ? "border-2 border-primary shadow-elegant"
                       : "border-2 border-transparent"
-                  }`}
+                    }`}
                   onClick={() => setSelectedRole(role.value)}
                 >
                   <div className={`w-12 h-12 bg-gradient-to-br ${role.color} rounded-xl flex items-center justify-center mb-3 mx-auto`}>
@@ -115,6 +173,33 @@ const Login = () => {
               </div>
 
               <div className="space-y-4">
+                {showResend && (
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800 animate-fade-in space-y-2">
+                    <p className="font-semibold">Account not verified</p>
+                    <p>Please verify your email before logging in. Click below to resend the verification link to: <strong>{resendEmail || email}</strong>.</p>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleResend}
+                        disabled={isResending}
+                        className="bg-white border-amber-300 text-amber-900 hover:bg-amber-100 hover:text-amber-955"
+                      >
+                        {isResending ? "Resending..." : "Resend Link"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowResend(false)}
+                        className="text-amber-700 hover:bg-amber-100/50"
+                      >
+                        Dismiss
+                      </Button>
+                    </div>
+                  </div>
+                )}
                 <div>
                   <Label htmlFor="email">Email</Label>
                   <Input
@@ -144,9 +229,22 @@ const Login = () => {
                     <input type="checkbox" className="rounded" />
                     <span className="text-muted-foreground">Remember me</span>
                   </label>
-                  <a href="#" className="text-primary hover:underline">
-                    Forgot password?
-                  </a>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowResend(true);
+                        setResendEmail(email || "");
+                      }}
+                      className="text-primary hover:underline text-xs"
+                    >
+                      Resend Verification?
+                    </button>
+                    <span className="text-muted-foreground">|</span>
+                    <a href="#" className="text-primary hover:underline text-xs">
+                      Forgot password?
+                    </a>
+                  </div>
                 </div>
               </div>
 

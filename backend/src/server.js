@@ -21,6 +21,8 @@ import parentRoutes from "./routes/parents.routes.js";
 import staffRoutes from "./routes/staff.routes.js";
 import testimonialRoutes from "./routes/testimonials.routes.js";
 import authRoutes from "./routes/auth.routes.js";
+import { errorHandler } from "./middleware/errorHandler.js";
+import { verifyToken, authorizeRoles } from "./middleware/auth.js";
 
 dotenv.config();
 
@@ -58,21 +60,21 @@ app.get("/api/health", (_req, res) => {
 });
 
 // Routes
-app.use("/api/admin/students", studentRoutes);
-app.use("/api/admin/teachers", teacherRoutes);
-app.use("/api/admin/classes", classRoutes);
-app.use("/api/admin/transport", transportRoutes);
-app.use("/api/admin/finance", financeRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/admin/events", eventRoutes);
-app.use("/api/admin/notifications", notificationRoutes);
-app.use("/api/admin/assets", assetRoutes);
-app.use("/api/admin/settings", settingRoutes);
-app.use("/api/admin/reports", reportRoutes);
-app.use("/api/admin/messages", messageRoutes);
-app.use("/api/admin/maintenance", maintenanceRoutes);
-app.use("/api/parents", parentRoutes);
-app.use("/api/staff", staffRoutes);
+app.use("/api/admin/students", verifyToken, authorizeRoles("admin", "student"), studentRoutes);
+app.use("/api/admin/teachers", verifyToken, authorizeRoles("admin", "teacher"), teacherRoutes);
+app.use("/api/admin/classes", verifyToken, authorizeRoles("admin", "teacher"), classRoutes);
+app.use("/api/admin/transport", verifyToken, authorizeRoles("admin", "transport"), transportRoutes);
+app.use("/api/admin/finance", verifyToken, authorizeRoles("admin"), financeRoutes);
+app.use("/api/admin", verifyToken, authorizeRoles("admin"), adminRoutes);
+app.use("/api/admin/events", verifyToken, authorizeRoles("admin", "teacher", "student", "parent", "staff", "transport"), eventRoutes);
+app.use("/api/admin/notifications", verifyToken, authorizeRoles("admin", "teacher", "student", "parent", "staff", "transport"), notificationRoutes);
+app.use("/api/admin/assets", verifyToken, authorizeRoles("admin", "staff"), assetRoutes);
+app.use("/api/admin/settings", verifyToken, authorizeRoles("admin"), settingRoutes);
+app.use("/api/admin/reports", verifyToken, authorizeRoles("admin"), reportRoutes);
+app.use("/api/admin/messages", verifyToken, authorizeRoles("admin", "teacher", "student", "parent", "staff", "transport"), messageRoutes);
+app.use("/api/admin/maintenance", verifyToken, authorizeRoles("admin", "staff"), maintenanceRoutes);
+app.use("/api/parents", verifyToken, authorizeRoles("admin", "parent"), parentRoutes);
+app.use("/api/staff", verifyToken, authorizeRoles("admin", "staff"), staffRoutes);
 app.use("/api/testimonials", testimonialRoutes);
 app.use("/api/auth", authRoutes);
 
@@ -85,6 +87,9 @@ app.get("/api/test/db", async (_req, res) => {
     res.status(500).json({ connected: false, error: err.message });
   }
 });
+
+// Centralized error handling middleware
+app.use(errorHandler);
 
 let PORT = Number(process.env.PORT) || 4000;
 

@@ -25,6 +25,8 @@ import StaffTask from "./models/StaffTask.js";
 import StaffAttendance from "./models/StaffAttendance.js";
 import StaffLeave from "./models/StaffLeave.js";
 import StaffPayroll from "./models/StaffPayroll.js";
+import User from "./models/User.js";
+import bcrypt from "bcryptjs";
 
 dotenv.config();
 
@@ -58,6 +60,7 @@ async function run() {
     StaffLeave.deleteMany({}),
     StaffPayroll.deleteMany({}),
     MaintenanceRequest.deleteMany({}),
+    User.deleteMany({}),
   ]);
 
   // Students (idempotent upsert to avoid duplicate key errors)
@@ -324,6 +327,18 @@ async function run() {
     { facility: "Library - Main Building", issue: "Water Leakage", priority: "High", date: new Date("2025-01-08"), status: "Completed" },
     { facility: "Sports Ground", issue: "Equipment Maintenance", priority: "Low", date: new Date("2025-01-07"), status: "Pending" },
   ]);
+
+  // Seed verified users for easy testing of the 6 roles
+  const hashedPassword = bcrypt.hashSync("password123", 10);
+  await User.insertMany([
+    { name: "Admin Founder", email: "admin@school.com", password: hashedPassword, role: "admin", verified: true },
+    { name: "Teacher User", email: "teacher@school.com", password: hashedPassword, role: "teacher", verified: true },
+    { name: "Student User", email: "student@school.com", password: hashedPassword, role: "student", verified: true },
+    { name: "Parent User", email: "parent@school.com", password: hashedPassword, role: "parent", verified: true },
+    { name: "Staff User", email: "staff@school.com", password: hashedPassword, role: "staff", verified: true },
+    { name: "Transport User", email: "transport@school.com", password: hashedPassword, role: "transport", verified: true },
+  ]);
+  console.log("✓ Seeded auth users for all six roles (password: password123)");
 
   console.log("Seeded:", {
     students: students.length,

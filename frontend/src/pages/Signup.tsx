@@ -3,14 +3,17 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { GraduationCap, ArrowLeft } from "lucide-react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 
 const Signup = () => {
   const [formData, setFormData] = useState({
+    role: "admin",
     schoolName: "",
     principalName: "",
+    name: "",
     email: "",
     phone: "",
     address: "",
@@ -31,16 +34,20 @@ const Signup = () => {
     setIsLoading(true);
     try {
       await api.post('/auth/signup', {
-        schoolName: formData.schoolName,
-        principalName: formData.principalName,
+        role: formData.role,
+        schoolName: formData.role === "admin" ? formData.schoolName : undefined,
+        principalName: formData.role === "admin" ? formData.principalName : undefined,
+        name: formData.role !== "admin" ? formData.name : undefined,
         email: formData.email,
         phone: formData.phone,
         address: formData.address,
         password: formData.password
       });
       
-      toast.success("Account created successfully! Please login.");
-      navigate("/login");
+      toast.success("Account created successfully! Please check your email to verify your account before logging in.", {
+        duration: 8000
+      });
+      navigate("/login?registered=true");
     } catch (error: any) {
       toast.error(error.message || "Failed to create account");
     } finally {
@@ -65,18 +72,47 @@ const Signup = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            placeholder="School Name"
-            value={formData.schoolName}
-            onChange={(e) => setFormData({ ...formData, schoolName: e.target.value })}
-            required
-          />
-          <Input
-            placeholder="Principal Name"
-            value={formData.principalName}
-            onChange={(e) => setFormData({ ...formData, principalName: e.target.value })}
-            required
-          />
+          <div className="space-y-1">
+            <Label htmlFor="role">Register As</Label>
+            <select
+              id="role"
+              value={formData.role}
+              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+              className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md bg-white text-sm"
+              required
+            >
+              <option value="admin">Admin / School Founder</option>
+              <option value="teacher">Teacher</option>
+              <option value="student">Student</option>
+              <option value="parent">Parent</option>
+              <option value="staff">Staff</option>
+              <option value="transport">Transport Staff</option>
+            </select>
+          </div>
+
+          {formData.role === "admin" ? (
+            <>
+              <Input
+                placeholder="School Name"
+                value={formData.schoolName}
+                onChange={(e) => setFormData({ ...formData, schoolName: e.target.value })}
+                required
+              />
+              <Input
+                placeholder="Principal Name"
+                value={formData.principalName}
+                onChange={(e) => setFormData({ ...formData, principalName: e.target.value })}
+                required
+              />
+            </>
+          ) : (
+            <Input
+              placeholder="Full Name"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              required
+            />
+          )}
           <Input
             type="email"
             placeholder="Email"

@@ -8,7 +8,10 @@ const SchoolSchema = new mongoose.Schema(
     phone: { type: String, required: true },
     address: { type: String, required: true },
     password: { type: String, required: true },
-    isActive: { type: Boolean, default: true }
+    isActive: { type: Boolean, default: true },
+    verified: { type: Boolean, default: false },
+    verificationToken: { type: String, default: null },
+    verificationTokenExpiry: { type: Date, default: null }
   },
   { timestamps: true }
 );
